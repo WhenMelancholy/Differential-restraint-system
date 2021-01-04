@@ -1,0 +1,11 @@
+# This file is used internally by FFMPEG.
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/1342159004_1828675837_2266846142.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_4180579860_1658916524.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_3559789755_4189407299.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_4180579860_2670550577.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_3009850970_295107525.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_4180579860_1922023503.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_466481735_320187664.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_4180579860_2254882814.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_364588562_516381080.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/720p30/partial_movie_files/Graph/2708194817_4180579860_112483797.mp4'
