@@ -1,0 +1,7 @@
+# This file is used internally by FFMPEG.
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TransformPartOfMathTex/450974505_2573771103_894067758.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TransformPartOfMathTex/2788726626_2285840648_2145685575.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TransformPartOfMathTex/2788726626_4180579860_974185681.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TransformPartOfMathTex/2788726626_3928949079_300587759.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TransformPartOfMathTex/2788726626_59389475_2506236997.mp4'
+file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TransformPartOfMathTex/2788726626_4180579860_1591487365.mp4'
