@@ -1,6 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/MoveText/450974505_1235373732_2446802747.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/MoveText/2788726626_3447242172_2446802747.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/MoveText/2788726626_4180579860_1899934849.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/MoveText/2788726626_2089953039_2446802747.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/MoveText/2788726626_4180579860_3814163927.mp4'
