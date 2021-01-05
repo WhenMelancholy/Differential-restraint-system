@@ -1,4 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/GaussLaw/450974505_539701479_3849534047.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/GaussLaw/2788726626_1179076197_2337107761.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/GaussLaw/2788726626_4180579860_3425989266.mp4'

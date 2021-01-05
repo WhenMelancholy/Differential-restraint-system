@@ -1,4 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TexTransform/450974505_454678293_3877127915.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TexTransform/2788726626_2743088187_3877127915.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/study/1080p60/partial_movie_files/TexTransform/2788726626_4180579860_4258370995.mp4'

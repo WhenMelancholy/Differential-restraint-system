@@ -1,7 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/480p15/partial_movie_files/Graph/3163782288_1828675837_2266846142.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/480p15/partial_movie_files/Graph/1495979052_4180579860_1658916524.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/480p15/partial_movie_files/Graph/1495979052_2377923846_4189407299.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/480p15/partial_movie_files/Graph/1495979052_4180579860_1464887937.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/480p15/partial_movie_files/Graph/1495979052_3453659791_2939700457.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/test/media/videos/ppt/480p15/partial_movie_files/Graph/1495979052_4180579860_2050928627.mp4'
