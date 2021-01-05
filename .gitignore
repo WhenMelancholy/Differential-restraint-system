@@ -1,5 +1,8 @@
 # 杂七杂八的目录
 /test
+media/
+Tex/
+texts/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

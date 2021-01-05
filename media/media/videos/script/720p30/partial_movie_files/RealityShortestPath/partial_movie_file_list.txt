@@ -1,3 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:E:/project/python/The-beauty-of-Splay/media/media/videos/script/720p30/partial_movie_files/RealityShortestPath/1342159004_1668430141_1969509033.mp4'
-file 'file:E:/project/python/The-beauty-of-Splay/media/media/videos/script/720p30/partial_movie_files/RealityShortestPath/2708194817_47953914_3064762037.mp4'
