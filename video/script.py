@@ -247,7 +247,7 @@ class IntroductionToGraph(PikachuScene):
             node.move_to(np.array([x, y, 0]))
             nodes.append(node)
 
-        def get_edge(m, x, y, w, offset=0.3, cls=Line):
+        def get_edge(m, x, y, w, offset=1, cls=Line):
             line = cls(m[x].get_center(), m[y].get_center())
             num = DecimalNumber(
                 w,
@@ -278,17 +278,16 @@ class IntroductionToGraph(PikachuScene):
                  get_edge(nodes, 0, 4, 5.5, cls=Arrow),
                  get_edge(nodes, 0, 2, -1000),
                  get_edge(nodes, 1, 4, 0, cls=Arrow),
-                 get_edge(nodes, 2, 3, -200)]
+                 get_edge(nodes, 2, 3, -200),
+                 get_edge(nodes, 0, 3, 100)]
 
         # layout
 
         # present
         # 因此, 让我们将现实中的地图抽象出来, 定义一个新的结构, 图
         self.play(
-            *[FadeIn(m) for m in nodes],
-        )
-        self.play(
             *[FadeIn(m) for m in edges],
+            *[FadeIn(m) for m in nodes],
             *[FadeIn(i.num) for i in edges],
         )
 
@@ -324,7 +323,37 @@ class IntroductionToGraph(PikachuScene):
               filter(lambda m: isinstance(m, (Line, Arrow)) and m.num.get_value() <= 0,
                      self.get_mobject_family_members())]
         )
+
+        # 有了边权, 就可以引出最短路的定义
+        # 两个点之间边权和最短的一条路径就是最短路
+        # 例如, 图中从3到0的最短路是0->2->3, 而不是0->3, 因为0->2->3的边权和最小, 为-1200
+        def find_edge(x, y, es=edges, ns=nodes):
+            for i in es:
+                if i.end_one == ns[x] and i.end_two == ns[y]:
+                    return i
+                if i.end_one == ns[y] and i.end_two == ns[x]:
+                    return i
+
+        self.play(Indicate(find_edge(0, 2), scale_factor=1))
+        self.play(Indicate(find_edge(2, 3), scale_factor=1))
+        self.play(Indicate(find_edge(0, 3), scale_factor=1))
+        shortest_num = DecimalNumber(-1200)
+        shortest_num.to_edge(DOWN)
+        self.play(
+            Transform(VGroup(find_edge(0, 2).num.copy(), find_edge(2, 3).num.copy()),
+                      shortest_num)
+        )
+        # 同时, 从4到1的最短路不存在, 因为1到4之间的边是单向边, 只能从1到4, 不能从4到1
+        self.play(Indicate(find_edge(1, 4), scale_factor=1))
         self.play(*[FadeOut(i) for i in self.get_mobject_family_members()])
+        # 最短路问题研究的十分广泛, 有着多种快速解法,
+        spfa = Text("SPFA 算法")
+        dijkstra = Text("Dijkstra 算法")
+        VGroup(spfa, dijkstra).arrange(DOWN)
+        self.play(FadeIn(spfa))
+        self.play(FadeIn(dijkstra))
+        # 很多问题也可以转换为最短路问题来求解,
+        # 比如差分约束问题
         pass
 
     def construct(self):
@@ -344,22 +373,12 @@ class IntroductionToGraph(PikachuScene):
         # 低优先级: 介绍重边和自环
         # 边还有边权, 对应着道路的距离
         # 低优先级: 介绍负的边权和零的距离
-        self.graph_scene()
-        pass
-
-
-class IntroductionToShortestPath(PikachuScene):
-    """
-    简单介绍计算机中的最短路及相关性质
-    """
-
-    def construct(self):
-        # 显示
         # 有了边权, 就可以引出最短路的定义
         # 两个点之间边权和最短的一条路径就是最短路
         # 最短路问题研究的十分广泛, 有着多种快速解法,
         # 很多问题也可以转换为最短路问题来求解,
         # 比如差分约束问题
+        self.graph_scene()
         pass
 
 
@@ -370,12 +389,83 @@ class IntroudctionToSystemOfDifferenceConstraints(PikachuScene):
 
     def construct(self):
         # 显示
+        # 很高兴你能看到这
+        # 再重复一下, 不要被这个高大上的名词吓到了, 它的命名可以从定义直观的感受到
         # 差分约束系统由 n 个变量
+        var = MathTex(
+            "x_1",
+            ",",
+            "x_2",
+            ",",
+            r"\dots"
+            ",",
+            "x_n"
+        )
+        brace = Brace(var, direction=UP)
+        text = brace.get_tex(r"n\text{ variables}")
+
+        var_group = VGroup(var, brace, text)
+
+        equations = MathTex(
+            r"x_{i_1}", r"-", r"x_{j_2}\leqslant w_1\\",
+            r"x_{i_2}", r"-", r"x_{j_2}\leqslant w_2\\",
+            r"\vdots\\",
+            r"x_{i_m}", r"-", r"x_{j_m}\leqslant w_m\\",
+        )
+        eq_brace = Brace(equations, direction=LEFT)
+        eq_text = eq_brace.get_tex(r"m \text{ equations}")
+
+        eq_group = VGroup(equations, eq_brace, eq_text)
+
+        self.play(ShowCreation(var))
+        self.play(FadeIn(brace))
+        self.play(Write(text))
+
         # 和 m 个不等式组组成
+        self.play(var_group.animate.next_to(equations, UP))
+        self.play(ShowCreation(equations))
+        self.play(FadeIn(eq_brace))
+        self.play(Write(eq_text))
+
         # 每个不等都都是对变量间差值的约束,
+        self.play(
+            Indicate(equations[1]),
+            Indicate(equations[4]),
+            Indicate(equations[8]),
+        )
         # 因此得名差分约束系统
+        # 差分约束问题就是找出一组合法的解满足差分约束系统
+        self.play(
+            Indicate(var)
+        )
+        self.play(
+            Indicate(equations)
+        )
+        # 唔, 观众们可以暂停自己写几个例子, 这并不是一个简洁的公式就可以求解的问题, 感受到了吗?
         # 当变量个数很少的时候, 手算便可以轻松得到解答
+        var_and_eq = var_group + eq_group
+        self.play(
+            var_and_eq.animate.shift(2 * LEFT)
+        )
+
+        n_eq = MathTex("n=")
+        m_eq = MathTex("m=")
+        n_num = DecimalNumber(3, num_decimal_places=0)
+        m_num = DecimalNumber(5, num_decimal_places=0)
+        VGroup(n_eq, m_eq, n_num, m_num).scale(2)
+
+        n_eq.next_to(equations, RIGHT + UP)
+        m_eq.next_to(n_eq, DOWN)
+        n_num.next_to(n_eq, RIGHT)
+        m_num.next_to(m_eq, RIGHT)
+
+        n_num.add_updater(lambda m: m.increment_value() if m.get_value() < 10000 else None)
+        m_num.add_updater(lambda m: m.increment_value() if m.get_value() < 100000 else None)
+        self.play(ShowCreation(VGroup(n_eq, n_num)))
+        self.play(ShowCreation(VGroup(m_eq, m_num)))
         # 但是当变量个数增加的时候, 就需要依靠计算机来求解了
+
+        self.wait(5)
         # 但是计算机怎么求解呢?
         pass
 
