@@ -62,11 +62,11 @@ class Begin(PikachuScene):
     展示校徽/课程/姓名
     """
     CONFIG = {
-        "svg_name": "white.svg",
+        "svg_name": r"asset\white.svg",
         "author": "When",
         "class_name": "科学之美",
-        "png_name": "logo.png",
-        "logo_scale": 0.25,
+        "png_name": r"asset\logo.png",
+        "logo_scale": 0.2,
     }
 
     # def __init__(self, **kwargs):
@@ -85,20 +85,30 @@ class Begin(PikachuScene):
         author = Text(self.author)
 
         # 排版布局
-        strings = VGroup(class_name, author).arrange(RIGHT)
-        Group(logo, strings).arrange(DOWN)
+        strings = VGroup(class_name, author).arrange(RIGHT, buff=2)
+        Group(logo, strings).arrange(DOWN, buff=1)
 
         # 展示对象
         self.play(
             GrowFromCenter(logo),
-            ShowCreation(strings),
+            Write(strings),
         )
 
 
-class Title(PikachuScene):
+class BeginTitle(PikachuScene):
     """
     展示视频的标题
     """
+
+    def construct(self):
+        awesome = Text("日常生活中无处不在的最短路, ")
+        extend = Text("在数学中还有这种拓展?!")
+        all_obj = VGroup(awesome, extend)
+        all_obj.arrange(DOWN)
+        all_obj.scale(1.5)
+
+        self.play(Write(awesome))
+        self.play(Write(extend))
 
 
 class RealityShortestPath(PikachuScene):
@@ -133,8 +143,8 @@ class RealityShortestPath(PikachuScene):
         # 生成
         bike = SVGMobject(self.bike_file, stroke_width=0.5 * DEFAULT_STROKE_WIDTH).scale(self.bike_scale)
         person = SVGMobject(self.person_file, stroke_width=0.5 * DEFAULT_STROKE_WIDTH).scale(self.person_scale)
-        happy = SVGMobject(self.happy_file)
-        sad = SVGMobject(self.sad_file)
+        # happy = SVGMobject(self.happy_file)
+        # sad = SVGMobject(self.sad_file)
 
         # 布局
         bike.to_edge(UP + LEFT)
@@ -146,8 +156,8 @@ class RealityShortestPath(PikachuScene):
         # 在生活中的很多地方, 都有最短路的概念
         # 小到送外卖的时候
         self.play(ShowCreation(bike), ShowCreation(person))
-        # 地图为外卖小哥推荐了最短的路线
         self.play(ShowCreation(short_line), ShowCreation(random_line))
+        # 地图为外卖小哥推荐了最短的路线
         # 饿扁了的孩子就可以早点吃上饭菜
         # 假如地图给出了错误的路线
         # 孩子就只能饥肠辘辘了
@@ -170,8 +180,13 @@ class RealityShortestPath(PikachuScene):
     def get_random_line(self, start, end):
         points = [
             start,
-            np.array([1, 1, 0]),
-            np.array([2, 2, 0]),
+            np.array([-7, 3, 0]),
+            np.array([-5, 0, 0]),
+            np.array([-3, 2, 0]),
+            np.array([-1, 0, 0]),
+            np.array([1, 4, 0]),
+            np.array([3, 0, 0]),
+            np.array([5, 1, 0]),
             end,
         ]
         return CubicBezier(points)
@@ -655,7 +670,7 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
         e.num = self.add_num(e, "w")
         two_group = VGroup(two_node, e.num)
         eq6 = MathTex(r"x_i-x_j\leqslant w")
-        
+
         sol = VGroup(eq6, leftrightarrow.copy(), two_group)
         sol.arrange(RIGHT)
         sol.next_to(updownarrow, DOWN)
@@ -681,7 +696,7 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
         question = MathTex(
             r"x_a-x_b&\geqslant{}w\\",
             r"x_a&=x_b\\",
-            r"x_i/x_j&\leqslant{} w",
+            r"{x_i\over x_j}&\leqslant{} w",
         )
         self.play(ReplacementTransform(answer, question))
         pass
@@ -705,11 +720,15 @@ class Bilibili(PikachuScene):
         good = SVGMobject(self.good_svg)
         three = VGroup(good, coin, favo)
         three.arrange(RIGHT, buff=1.0)
+
         banner = ManimBanner().scale(0.3)
         blue_brown = ImageMobject(self.blue_brown_svg)
         blue_brown.set_height(banner.get_height())
         thanks = Group(banner, blue_brown)
         thanks.arrange(RIGHT)
+
+        three.set_height(banner.get_height())
+        thanks.scale(2)
 
         # 显示
         # 假如你觉得我们的视频不错的话,
