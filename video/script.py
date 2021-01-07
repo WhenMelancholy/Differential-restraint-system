@@ -26,6 +26,27 @@ class TestTheScaleOfCanvas(Scene):
 
 
 class PikachuScene(Scene):
+    def add_num(self, mob: Line, w: int or str, offset=0.15, scaler=0.7):
+        if isinstance(w, int):
+            num = Integer(w, num_decimal_places=0)
+        elif isinstance(w, str):
+            num = MathTex(w)
+        else:
+            raise Exception("Please given right argument")
+        num.move_to(mob.get_center() + mob.copy().rotate(PI / 2).get_unit_vector() * offset)
+        # angle = mob.get_angle() + PI
+        # if angle >= 2 * PI:
+        #     angle -= 2 * PI
+        # if angle <= -2 * PI:
+        #     angle += 2 * PI
+        # print(w, angle)
+        # angle = 0
+        # if angle > PI / 2 or angle < -PI / 2:
+        #     angle += PI
+        # num.rotate(angle)
+        num.scale(scaler)
+        return num
+
     CONFIG = {
 
     }
@@ -247,19 +268,30 @@ class IntroductionToGraph(PikachuScene):
             node.move_to(np.array([x, y, 0]))
             nodes.append(node)
 
-        def get_edge(m, x, y, w, offset=1, cls=Line):
-            line = cls(m[x].get_center(), m[y].get_center())
-            num = DecimalNumber(
-                w,
-                num_decimal_places=1,
-                show_ellipsis=False,
-                include_sign=False,
-            )
+        def get_edge(m, x, y, w, offset=0.3, cls=Line, scaler=0.5):
+            line = cls(m[x].get_center(), m[y].get_center(), z_index=-1)
+            # num = DecimalNumber(
+            #     w,
+            #     num_decimal_places=1,
+            #     show_ellipsis=False,
+            #     include_sign=False,
+            # )
             line.end_one = m[x]
             line.end_two = m[y]
-            line.num = num
-            num.line = line
-            num.offset = offset
+
+            line.num = self.add_num(line, w, offset, scaler)
+
+            # line.num = num
+            # num.line = line
+            # num.offset = offset
+            # num.move_to(line.get_center() + line.copy().rotate(PI / 2).get_unit_vector() * offset)
+            # num.scale(scaler)
+            #
+            # angle = line.get_angle()
+            # num.rotate(angle + PI)
+
+            # num_text = BraceText(line, str(w), brace_direction=line.copy().rotate(PI / 2).get_unit_vector())
+            # line.num = num_text
 
             def updater(mob: Line):
                 mob.set_start_and_end_attrs(line.end_one, line.end_two)
@@ -270,8 +302,8 @@ class IntroductionToGraph(PikachuScene):
                 mob.move_to(ll.get_center() + ll.copy().rotate(PI / 2).get_unit_vector() * mob.offset)
                 pass
 
-            line.add_updater(updater)
-            num.add_updater(num_updater)
+            # line.add_updater(updater)
+            # num.add_updater(num_updater)
             return line
 
         edges = [get_edge(nodes, 0, 5, 3),
@@ -286,9 +318,9 @@ class IntroductionToGraph(PikachuScene):
         # present
         # 因此, 让我们将现实中的地图抽象出来, 定义一个新的结构, 图
         self.play(
-            *[FadeIn(m) for m in edges],
-            *[FadeIn(m) for m in nodes],
-            *[FadeIn(i.num) for i in edges],
+            *[ShowCreation(m) for m in nodes],
+            *[ShowCreation(m) for m in edges],
+            *[ShowCreation(i.num) for i in edges],
         )
 
         # 图里面有着节点, 对应着地图里面的地点
@@ -412,7 +444,7 @@ class IntroudctionToSystemOfDifferenceConstraints(PikachuScene):
             r"\vdots\\",
             r"x_{i_m}", r"-", r"x_{j_m}\leqslant w_m\\",
         )
-        eq_brace = Brace(equations, direction=LEFT)
+        eq_brace = Brace(equations, direction=RIGHT)
         eq_text = eq_brace.get_tex(r"m \text{ equations}")
 
         eq_group = VGroup(equations, eq_brace, eq_text)
@@ -445,27 +477,33 @@ class IntroudctionToSystemOfDifferenceConstraints(PikachuScene):
         # 当变量个数很少的时候, 手算便可以轻松得到解答
         var_and_eq = var_group + eq_group
         self.play(
-            var_and_eq.animate.shift(2 * LEFT)
+            var_and_eq.animate.shift(UP)
         )
 
         n_eq = MathTex("n=")
         m_eq = MathTex("m=")
-        n_num = DecimalNumber(3, num_decimal_places=0)
-        m_num = DecimalNumber(5, num_decimal_places=0)
-        VGroup(n_eq, m_eq, n_num, m_num).scale(2)
+        n_num = Integer(3, num_decimal_places=0)
+        m_num = Integer(5, num_decimal_places=0)
+        n_big_num = Integer(10000, num_decimal_places=0)
+        m_big_num = Integer(100000, num_decimal_places=0)
+        VGroup(n_eq, m_eq, n_num, m_num, n_big_num, m_big_num).scale(1)
 
-        n_eq.next_to(equations, RIGHT + UP)
+        n_eq.next_to(equations, DOWN)
         m_eq.next_to(n_eq, DOWN)
         n_num.next_to(n_eq, RIGHT)
         m_num.next_to(m_eq, RIGHT)
 
-        n_num.add_updater(lambda m: m.increment_value() if m.get_value() < 10000 else None)
-        m_num.add_updater(lambda m: m.increment_value() if m.get_value() < 100000 else None)
         self.play(ShowCreation(VGroup(n_eq, n_num)))
         self.play(ShowCreation(VGroup(m_eq, m_num)))
         # 但是当变量个数增加的时候, 就需要依靠计算机来求解了
+        self.play(
+            VGroup(n_eq, m_eq, n_num, m_num).animate.shift(LEFT)
+        )
 
-        self.wait(5)
+        n_big_num.next_to(n_eq, RIGHT)
+        m_big_num.next_to(m_eq, RIGHT)
+        self.play(ReplacementTransform(n_num, n_big_num),
+                  ReplacementTransform(m_num, m_big_num))
         # 但是计算机怎么求解呢?
         pass
 
@@ -478,25 +516,174 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
     def construct(self):
         # 显示
         # 还记得我们前面提到的最短路吗
+        points = list(range(1, 7))
+        edges = [(6, 3), (3, 1), (3, 5),
+                 (5, 2), (2, 1),
+                 (1, 4), (2, 4)]
+
+        point_config = {}
+        for p in points:
+            point_config[p] = {"fill_color": RED}
+
+        graph = Graph(points, edges, edge_type=Arrow,
+                      labels=True, layout="spring",
+                      layout_scale=4, vertex_config=point_config)
+
+        ws = [10, 30, 5, 10, 1, 10, 15]
+        for w, e in zip(ws, edges):
+            edge = graph.edges[e]
+            edge.num = self.add_num(edge, w)
+
+        self.play(ShowCreation(graph),
+                  *[ShowCreation(i.num) for i in graph.edges.values()])
+        # 观众们还能选出6到1的最短路吗?
+        self.play(
+            *[Indicate(i) for i in
+              [graph.edges[j] for j in [(6, 3), (3, 5), (5, 2), (2, 1)]]]
+        )
         # 差分约束问题可以转化为最短路问题!
+        var = MathTex(
+            "x_1",
+            ",",
+            "x_2",
+            ",",
+            r"\dots"
+            ",",
+            "x_n"
+        )
+        brace = Brace(var, direction=UP)
+        text = brace.get_tex(r"n\text{ variables}")
+
+        var_group = VGroup(var, brace, text)
+
+        equations = MathTex(
+            r"x_{i_1}", r"-", r"x_{j_2}&\leqslant w_1\\",
+            r"x_{i_2}", r"-", r"x_{j_2}&\leqslant w_2\\",
+            r"\vdots&\\",
+            r"x_{i_m}", r"-", r"x_{j_m}&\leqslant w_m\\",
+        )
+        eq_brace = Brace(equations, direction=RIGHT)
+        eq_text = eq_brace.get_tex(r" ")
+
+        eq_group = VGroup(equations, eq_brace, eq_text)
+        var_and_eq = var_group + eq_group
+        var_group.next_to(equations, UP)
+        equal = MathTex(r"\iff{}")
+
+        graph_group = VGroup(graph, *[i.num for i in graph.edges.values()])
+
+        self.play(graph_group.animate.to_edge(LEFT))
+
+        equal.next_to(graph_group, RIGHT)
+        self.play(Write(equal))
+        var_and_eq.next_to(equal)
+        self.play(ShowCreation(var_and_eq))
         # 先给出一个小小的提示,
         # 运用最短路的以下条件(dis[x]代表x到起点的最短路, w[a,b]代表边权)
+        self.play(*[Uncreate(i) for i in var_and_eq + equal])
+        self.play(graph_group.animate.move_to(ORIGIN))
+        # 不妨设 dis[x] 代表6号节点到x节点的最短路
+        dis1 = MathTex(r'\text{dis}_1=')
+        dis1_num = Integer(26)
+        dis1.next_to(graph, DOWN).shift(LEFT)
+        dis1_num.next_to(dis1, RIGHT)
+
+        self.play(ShowCreation(dis1),
+                  ReplacementTransform(VGroup(*[graph.edges[j].num.copy() for j in
+                                                [(6, 3), (3, 5), (5, 2), (2, 1)]]), dis1_num))
+        self.play(Uncreate(dis1_num))
+        # 根据最短路的定义, 最短路显然比其他的路径短
+        # 因此, dis[1]<=dis[3]+w[3,1]
+        dis3 = MathTex(r"\text{dis}_3")
+        w31 = MathTex(r"w_{3\to 1}")
+        leq = MathTex(r"\leqslant{}")
+        plus = MathTex(r"+")
+        dis1_new = MathTex(r"\text{dis}_1")
+        equ1 = VGroup(dis1_new, leq, dis3, plus, w31)
+        equ1.arrange(RIGHT)
+        equ1.next_to(graph, DOWN)
+        self.play(ReplacementTransform(dis1, dis1_new))
+        self.play(Write(leq))
+        self.play(ShowCreation(dis3),
+                  ReplacementTransform(graph.edges[(6, 3)].num.copy(), dis3))
+        self.play(Write(plus))
+        self.play(ShowCreation(w31),
+                  ReplacementTransform(graph.edges[(3, 1)].num.copy(), w31))
         # 观众们可以暂停视频思考一下
         # 观众们可能已经发现了,
         # 这个等式和差分约束系统的不等式十分相似,
+        iff = MathTex(r"\iff{}")
+        equ2 = MathTex(
+            r"\text{dis}_3",
+            r"-",
+            r"\text{dis}_1",
+            r"\leqslant{}",
+            r"w_{3\to1}",
+        )
+        leftrightarrow = MathTex(r"\leftrightarrow{}")
+        eq3 = MathTex(
+            r"x_3",
+            r"-",
+            r"x_1",
+            r"\leqslant{}",
+            r"w_{3\to1}",
+        )
+        equ1_new = equ1.copy()
+        equ4 = VGroup(equ1_new, iff, equ2, leftrightarrow, eq3)
+        equ4.arrange(RIGHT)
+        equ4.next_to(graph, DOWN)
+        self.play(ReplacementTransform(equ1, equ1_new))
+        self.play(ShowCreation(VGroup(iff, equ2)))
+        self.play(ShowCreation(VGroup(leftrightarrow, eq3)))
         # 因此我们可以用节点和边权来模拟变量和约束,
         # 对于每一个约束 x_i-x_j<=w_i
+        self.play(Uncreate(equ1_new), Uncreate(iff))
+        self.play(Uncreate(graph_group))
+
+        eq5 = VGroup(equ2, leftrightarrow, eq3)
+        eq5.arrange(RIGHT)
+        self.play(eq5.animate.move_to(ORIGIN))
+        self.play(eq5.animate.shift(2 * UP))
+
+        updownarrow = MathTex(r"\updownarrow{}")
+        updownarrow.next_to(eq5, DOWN)
+        self.play(Write(updownarrow))
+
         # 从节点 j 和节点 i 之间连接一条边权为 w_i 的边
+        two_node = Graph(["i", "j"], [("j", "i")], labels=True, edge_type=Arrow, layout_scale=1)
+        e = two_node.edges[("j", "i")]
+        e.num = self.add_num(e, "w")
+        two_group = VGroup(two_node, e.num)
+        eq6 = MathTex(r"x_i-x_j\leqslant w")
+        
+        sol = VGroup(eq6, leftrightarrow.copy(), two_group)
+        sol.arrange(RIGHT)
+        sol.next_to(updownarrow, DOWN)
+        self.play(ShowCreation(sol))
         # 当然了, 由于差分约束系统存在多解, 因此我们还需要想办法来约束解以便得到一组特解
         # 观众们不妨暂停视频再想一想
         # 我们可以添加一个新的 0 号节点, 并且向每个点连一条权重为 0 的边
         # 这个做法相当于规定差分约束系统中最大的变量的值为 0
         # 接下来用之前提到过的算法求解出最短路, 便可以得到一组特解了, 特解就是 x_i = dis[i]
+        self.play(*[Uncreate(i) for i in self.get_mobject_family_members()])
+        answer = MathTex(
+            r"\text{dis}_1&=x_1\\",
+            r"\text{dis}_2&=x_2\\",
+            r"\vdots&\\",
+            r"\text{dis}_n&=x_n",
+        )
+        self.play(Write(answer))
         # 就这样, 一个数学上的问题转化为了一个图论中的问题, 并且得到了良好的解答
         # 当然, 差分约束系统还有一些扩展, 所以最后留一些思考题给大家, 大家可以思考如何讲这些问题转化为差分约束问题
         # x_a-x_b>=c
         # x_a=x_b
         # x_i/x_j<=c_k
+        question = MathTex(
+            r"x_a-x_b&\geqslant{}w\\",
+            r"x_a&=x_b\\",
+            r"x_i/x_j&\leqslant{} w",
+        )
+        self.play(ReplacementTransform(answer, question))
         pass
 
 
@@ -504,10 +691,59 @@ class Bilibili(PikachuScene):
     """
     求三连的界面
     """
+    CONFIG = {
+        "favo_svg": r"asset\favo.svg",
+        "good_svg": r"asset\good.svg",
+        "coin_svg": r"asset\coin.svg",
+        "blue_brown_svg": r"asset\3b1b_vector_logo.png",
+    }
 
     def construct(self):
+        # object
+        favo = SVGMobject(self.favo_svg)
+        coin = SVGMobject(self.coin_svg)
+        good = SVGMobject(self.good_svg)
+        three = VGroup(good, coin, favo)
+        three.arrange(RIGHT, buff=1.0)
+        banner = ManimBanner().scale(0.3)
+        blue_brown = ImageMobject(self.blue_brown_svg)
+        blue_brown.set_height(banner.get_height())
+        thanks = Group(banner, blue_brown)
+        thanks.arrange(RIGHT)
+
         # 显示
         # 假如你觉得我们的视频不错的话,
         # 求点赞求投币求收藏
+        self.play(ShowCreation(three))
+        for item in three:
+            self.play(
+                Indicate(item, color=PINK)
+            )
+
+        self.play(
+            three.animate.shift(2 * UP),
+        )
+        thanks.next_to(three, DOWN)
+        self.play(FadeIn(thanks))
+        self.play(banner.expand())
+
         # 感谢观看!
+        # 同时展示3Blue1Brown和Manim的Banner
         pass
+
+
+class LabeledModifiedGraph(Scene):
+    def construct(self):
+        vertices = [1, 2, 3, 4, 5, 6, 7, 8]
+        edges = [(1, 7), (1, 8), (2, 3), (2, 4), (2, 5),
+                 (2, 8), (3, 4), (6, 1), (6, 2),
+                 (6, 3), (7, 2), (7, 4)]
+        g = Graph(vertices, edges, layout="circular", layout_scale=3,
+                  labels=True, vertex_config={7: {"fill_color": RED}},
+                  edge_config={(1, 7): {"stroke_color": RED},
+                               (2, 7): {"stroke_color": RED},
+                               (4, 7): {"stroke_color": RED}})
+        self.play(*[FadeIn(i) for i in g.edges.values()])
+        self.play(*[FadeIn(i) for i in g.vertices.values()])
+        self.play(*[FadeOut(i) for i in g.family_members_with_points()])
+        # print(g.get_family())
