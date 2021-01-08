@@ -26,6 +26,56 @@ class TestTheScaleOfCanvas(Scene):
 
 
 class PikachuScene(Scene):
+    def sub(self, time=None, *args, **kwargs):
+        if not time:
+            if not self.pretitle:
+                time = DEFAULT_WAIT_TIME
+            else:
+                time = self.pretitle.time
+        super().wait(time, *args, **kwargs)
+        self.play(FadeOut(self.pretitle), run_time=1.0)
+        self.pretitle = None
+
+    def my_play(self, *args, run_time=None, **kwargs):
+        if not run_time:
+            if self.pretitle:
+                run_time = self.pretitle.time
+                super().play(*args, run_time=run_time, **kwargs)
+            else:
+                super().play(*args, **kwargs)
+        else:
+            super().play(*args, run_time=run_time, **kwargs)
+
+    def subtitle(self, text, time=None, wait=False, per=0.1, **kwargs):
+        if self.pretitle:
+            self.play(FadeOut(self.pretitle))
+        pretitle = Text(text, **kwargs)
+        pretitle.scale(0.5)
+        if pretitle.get_width() > 0.9 * config.frame_width:
+            pretitle.set_width(0.9 * config.frame_width)
+        pretitle.to_edge(DOWN)
+        if not time:
+            time = len(text) * per
+        pretitle.time = time
+        self.play(FadeIn(pretitle))
+        self.pretitle = pretitle
+        # if not wait:
+        #     time *= 1000
+        #     pretitle.time = time
+        #
+        #     def updater(mob, dt):
+        #         if dt > mob.time:
+        #             self.play(Uncreate(mob))
+        #             self.pretitle = None
+        #
+        #     pretitle.add_updater(updater)
+        #     self.play(Write(pretitle))
+        #     self.pretitle = pretitle
+        # else:
+        #     self.play(Write(pretitle))
+        #     self.wait(time)
+        #     self.play(Uncreate(pretitle))
+
     def add_num(self, mob: Line, w: int or str, offset=0.15, scaler=0.7):
         if isinstance(w, int):
             num = Integer(w, num_decimal_places=0)
@@ -33,6 +83,7 @@ class PikachuScene(Scene):
             num = MathTex(w)
         else:
             raise Exception("Please given right argument")
+        num.set_color(GREEN)
         num.move_to(mob.get_center() + mob.copy().rotate(PI / 2).get_unit_vector() * offset)
         # angle = mob.get_angle() + PI
         # if angle >= 2 * PI:
@@ -52,6 +103,7 @@ class PikachuScene(Scene):
     }
 
     def __init__(self, **kwargs):
+        self.pretitle = None
         super().__init__(**kwargs)
         for k, v in self.CONFIG.items():
             self.__setattr__(k, v)
@@ -126,7 +178,7 @@ class RealityShortestPath(PikachuScene):
         "person_pos": np.array([0.5, -0.5, 0]),
 
         "happy_file": r"asset\happy.svg",
-        "sad_file": r"asset\sad.svg",
+        "sad_file": r"asset\sad-cry-regular.svg",
     }
 
     # def __init__(self, **kwargs):
@@ -141,16 +193,20 @@ class RealityShortestPath(PikachuScene):
 
     def construct(self):
         # 生成
-        bike = SVGMobject(self.bike_file, stroke_width=0.5 * DEFAULT_STROKE_WIDTH).scale(self.bike_scale)
-        person = SVGMobject(self.person_file, stroke_width=0.5 * DEFAULT_STROKE_WIDTH).scale(self.person_scale)
-        # happy = SVGMobject(self.happy_file)
-        # sad = SVGMobject(self.sad_file)
+        bike = SVGMobject(self.bike_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.bike_scale)
+        person = SVGMobject(self.person_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.person_scale)
+        bike.add_background_rectangle(opacity=0)
+        person.add_background_rectangle(opacity=0)
+        happy = SVGMobject(self.happy_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.person_scale)
+        sad = SVGMobject(self.sad_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.person_scale)
 
         # 布局
         bike.to_edge(UP + LEFT)
         person.to_edge(DOWN + RIGHT)
         short_line = self.get_short_line([bike.get_right(), person.get_left()])
         random_line = self.get_random_line(bike.get_right(), person.get_left())
+        happy.move_to(person)
+        sad.move_to(person)
 
         # 显示
         # 在生活中的很多地方, 都有最短路的概念
@@ -158,9 +214,19 @@ class RealityShortestPath(PikachuScene):
         self.play(ShowCreation(bike), ShowCreation(person))
         self.play(ShowCreation(short_line), ShowCreation(random_line))
         # 地图为外卖小哥推荐了最短的路线
+        beg_pos = bike.get_center()
+        end_pos = person.get_center()
+        self.play(
+            MoveAlongPath(bike, Line(beg_pos, end_pos + UL))
+        )
         # 饿扁了的孩子就可以早点吃上饭菜
+        self.play(ReplacementTransform(person, happy))
+        self.play(MoveAlongPath(bike, Line(bike.get_center(), beg_pos)))
         # 假如地图给出了错误的路线
+        self.play(MoveAlongPath(bike, random_line[0]))
+        self.play(MoveAlongPath(bike, Line(bike.get_center(), happy.get_center() + UP)))
         # 孩子就只能饥肠辘辘了
+        self.play(ReplacementTransform(happy, sad))
         # 大到城市间的道路安排, 铁路公路的布局
         # 如何布局才能降低修建难度, 维护成本, 提高运营收益
         # 都有着最短路的身影
@@ -173,23 +239,34 @@ class RealityShortestPath(PikachuScene):
         pre = points.pop(0)
         lines = VGroup()
         for x in points:
-            lines.add(Line(pre, x))
+            lines.add(Line(pre, x, z_index=-1))
             pre = x
         return lines
 
     def get_random_line(self, start, end):
-        points = [
-            start,
-            np.array([-7, 3, 0]),
-            np.array([-5, 0, 0]),
-            np.array([-3, 2, 0]),
-            np.array([-1, 0, 0]),
-            np.array([1, 4, 0]),
-            np.array([3, 0, 0]),
-            np.array([5, 1, 0]),
-            end,
-        ]
-        return CubicBezier(points)
+        middle = np.array([end[0], start[1], 0])
+        return VGroup(
+            Line(start, middle, z_index=-1),
+            Line(middle, end, z_index=-1)
+        )
+
+        # points = [
+        #     start,
+        #     np.array([-7, 3, 0]),
+        #     np.array([-5, 0, 0]),
+        #     np.array([-3, 2, 0]),
+        #     np.array([-1, 0, 0]),
+        #     np.array([1, 4, 0]),
+        #     np.array([3, 0, 0]),
+        #     np.array([5, 1, 0]),
+        #     end,
+        # ]
+        #
+        # lines = VGroup()
+        # for i in range(0, len(points), 3):
+        #     j = min(len(points), i + 4)
+        #     lines += CubicBezier(points[i:j])
+        # return lines
 
 
 class Node(VDict):
@@ -247,24 +324,30 @@ class IntroductionToGraph(PikachuScene):
         # present
         # 数学上的最短路和现实有什么不一样吗?
         # 比如, 现实里面的距离只能是正数,
+        self.subtitle("抽象的最短路和现实有什么不一样吗?")
         self.play(
             ShowCreation(tall_building1),
             ShowCreation(tall_building2),
             ShowCreation(road),
+            run_time=1
         )
+        self.sub(1)
+        self.subtitle("比如, 现实里面的距离只能是正数,")
         self.play(
             ShowCreation(positive_brace),
             Write(five_km),
             Write(positive_text),
+            run_time=1
         )
-
+        self.sub(1)
         # 但是数学中的最短路还可以是负数
+        self.subtitle("但是抽象的距离还可以是负数")
         self.play(
             ReplacementTransform(VGroup(tall_building1, tall_building2, road, five_km, positive_text, positive_brace),
-                                 VGroup(node1, node2, road2, negative_km, dis, brace2))
+                                 VGroup(node1, node2, road2, negative_km, dis, brace2)),
+            run_time=1,
         )
-
-        self.wait()
+        self.sub()
         self.play(
             *[FadeOut(m) for m in self.get_mobject_family_members()]
         )
@@ -322,54 +405,81 @@ class IntroductionToGraph(PikachuScene):
             return line
 
         edges = [get_edge(nodes, 0, 5, 3),
-                 get_edge(nodes, 0, 4, 5.5, cls=Arrow),
-                 get_edge(nodes, 0, 2, -1000),
+                 get_edge(nodes, 0, 4, 5, cls=Arrow),
+                 get_edge(nodes, 0, 2, -10),
                  get_edge(nodes, 1, 4, 0, cls=Arrow),
-                 get_edge(nodes, 2, 3, -200),
-                 get_edge(nodes, 0, 3, 100)]
+                 get_edge(nodes, 2, 3, -20),
+                 get_edge(nodes, 0, 3, 10)]
 
         # layout
 
         # present
         # 因此, 让我们将现实中的地图抽象出来, 定义一个新的结构, 图
+        self.subtitle("因此, 让我们将现实中的地图抽象出来,")
+        ustc_map = ImageMobject(r"asset\map.jpg")
+        ustc_map.set_height(0.7 * config.frame_height)
+        self.play(FadeIn(ustc_map), run_time=1)
+        self.wait()
+        self.sub(1)
+        self.play(FadeOut(ustc_map))
+        self.subtitle("定义一个新的结构, 图")
         self.play(
             *[ShowCreation(m) for m in nodes],
             *[ShowCreation(m) for m in edges],
             *[ShowCreation(i.num) for i in edges],
+            run_time=1.5
         )
-
+        self.sub(1)
         # 图里面有着节点, 对应着地图里面的地点
+        self.subtitle("图里面有着节点, 对应着地图里面的地点")
         self.play(
             *[Flash(i["circle"], flash_radius=i["circle"].radius * 2) for i in
-              filter(lambda m: isinstance(m, Node), self.get_mobject_family_members())]
+              filter(lambda m: isinstance(m, Node), self.get_mobject_family_members())],
+            run_time=2,
         )
+        self.sub(1)
         # 有些节点之间有边, 对应着不同地点之间的道路
+        self.subtitle("有些节点之间有边, 就像不同地点之间的道路")
         self.play(
             *[Indicate(i, scale_factor=1) for i in
-              filter(lambda m: isinstance(m, (Line, Arrow)), self.get_mobject_family_members())]
+              filter(lambda m: isinstance(m, (Line, Arrow)), self.get_mobject_family_members())],
+            run_time=2,
         )
+        self.sub(1)
         # 边可以是有向的,
+        self.subtitle("边可以是有向的, 就像单行道")
         self.play(
             *[Indicate(i, scale_factor=1) for i in
-              filter(lambda m: isinstance(m, Arrow), self.get_mobject_family_members())]
+              filter(lambda m: isinstance(m, Arrow), self.get_mobject_family_members())],
+            run_time=2,
         )
+        self.sub(1)
         # 也可以是无向的
+        self.subtitle("也可以是无向的")
         self.play(
             *[Indicate(i, scale_factor=1) for i in
-              filter(lambda m: isinstance(m, Line), self.get_mobject_family_members())]
+              filter(lambda m: isinstance(m, Line) and not isinstance(m, Arrow), self.get_mobject_family_members())],
+            run_time=2,
         )
+        self.sub(1)
         # 低优先级: 介绍重边和自环
         # 边还有边权, 对应着道路的距离
+        self.subtitle("边还有边权, 就像道路的距离")
         self.play(
             *[Indicate(i.num) for i in
-              filter(lambda m: isinstance(m, (Line, Arrow)), self.get_mobject_family_members())]
+              filter(lambda m: isinstance(m, (Line, Arrow)), self.get_mobject_family_members())],
+            run_time=2,
         )
+        self.sub(1)
         # 低优先级: 介绍负的边权和零的距离
+        self.subtitle("但是不同的是, 边权可以为0或者是负数")
         self.play(
             *[Indicate(i.num) for i in
               filter(lambda m: isinstance(m, (Line, Arrow)) and m.num.get_value() <= 0,
-                     self.get_mobject_family_members())]
+                     self.get_mobject_family_members())],
+            run_time=2,
         )
+        self.sub(1)
 
         # 有了边权, 就可以引出最短路的定义
         # 两个点之间边权和最短的一条路径就是最短路
@@ -381,26 +491,53 @@ class IntroductionToGraph(PikachuScene):
                 if i.end_one == ns[y] and i.end_two == ns[x]:
                     return i
 
-        self.play(Indicate(find_edge(0, 2), scale_factor=1))
-        self.play(Indicate(find_edge(2, 3), scale_factor=1))
-        self.play(Indicate(find_edge(0, 3), scale_factor=1))
-        shortest_num = DecimalNumber(-1200)
-        shortest_num.to_edge(DOWN)
+        self.subtitle('有了边权, 就有了数学中最短路的概念')
+        self.sub(1)
+        self.subtitle("两个点之间边权和最短的一条路径就是最短路")
+        self.sub(1)
+        self.subtitle("注意不是边数最少的路径哦")
+        self.sub(1)
+        self.subtitle("例如, 图中从 3 到 0 的最短路是 0->2->3, 而不是 0->3")
+        self.play(Indicate(find_edge(0, 2), scale_factor=1), run_time=1)
+        self.play(Indicate(find_edge(2, 3), scale_factor=1), run_time=1)
+        self.play(Indicate(find_edge(0, 3), scale_factor=1, color=RED), run_time=1)
+        self.sub(1)
+        dis = -30
+        self.subtitle("最小的边权之和为 %d" % dis)
+        shortest_num = DecimalNumber(dis, num_decimal_places=0)
+        shortest_num.to_edge(RIGHT)
         self.play(
             Transform(VGroup(find_edge(0, 2).num.copy(), find_edge(2, 3).num.copy()),
                       shortest_num)
         )
         # 同时, 从4到1的最短路不存在, 因为1到4之间的边是单向边, 只能从1到4, 不能从4到1
-        self.play(Indicate(find_edge(1, 4), scale_factor=1))
+        self.sub(1)
+        self.subtitle("同时, 从 4 到 1 的最短路不存在")
+        self.sub(1)
+        self.subtitle("因为 1 到 4 之间的边是单向边, 只能从 1 到 4, 不能从 4 到 1")
+        self.play(Indicate(find_edge(1, 4), scale_factor=1), run_time=2)
+        self.sub(1)
         self.play(*[FadeOut(i) for i in self.get_mobject_family_members()])
         # 最短路问题研究的十分广泛, 有着多种快速解法,
         spfa = Text("SPFA 算法")
         dijkstra = Text("Dijkstra 算法")
         VGroup(spfa, dijkstra).arrange(DOWN)
+
+        self.subtitle("最短路的研究十分广泛, 有着很多快速的解法")
+        self.sub(0.5)
+        self.subtitle("比如 SPFA 算法")
         self.play(FadeIn(spfa))
+        self.sub(0.5)
+        self.subtitle("又比如 Dijkstra 算法")
         self.play(FadeIn(dijkstra))
+        self.sub(0.5)
         # 很多问题也可以转换为最短路问题来求解,
         # 比如差分约束问题
+        self.subtitle("由于最短路问题有着优秀的解法")
+        self.sub(1)
+        self.subtitle("因此许多问题都可以转换为最短路问题")
+        self.sub(1)
+        self.play(*[FadeOut(i) for i in self.get_mobject_family_members()])
         pass
 
     def construct(self):
@@ -464,62 +601,110 @@ class IntroudctionToSystemOfDifferenceConstraints(PikachuScene):
 
         eq_group = VGroup(equations, eq_brace, eq_text)
 
+        self.subtitle("例如, 差分约束系统")
         self.play(ShowCreation(var))
+        self.sub(0.5)
+        self.subtitle("等等, 不要被这个名词吓到了")
+        self.sub(1)
+        self.subtitle("他的命名和定义都很直观")
+        self.sub(1)
+        self.subtitle("差分约束系统由 n 个变量")
         self.play(FadeIn(brace))
         self.play(Write(text))
+        self.sub(0.5)
 
         # 和 m 个不等式组组成
+        self.subtitle("和 m 个不等式组成")
         self.play(var_group.animate.next_to(equations, UP))
         self.play(ShowCreation(equations))
         self.play(FadeIn(eq_brace))
         self.play(Write(eq_text))
+        self.sub(1)
 
         # 每个不等都都是对变量间差值的约束,
+        self.subtitle("每个不等式都是对变量间差值的约束")
         self.play(
             Indicate(equations[1]),
             Indicate(equations[4]),
             Indicate(equations[8]),
+            run_time=2,
         )
+        self.sub(0.5)
         # 因此得名差分约束系统
+        self.subtitle("因此得名差分约束系统")
+        self.sub(1)
         # 差分约束问题就是找出一组合法的解满足差分约束系统
+        self.subtitle('差分约束问题就是找出一组合法的解')
         self.play(
-            Indicate(var)
+            Indicate(var),
+            run_time=2,
         )
+        self.sub(0.5)
+        self.subtitle("满足差分不等式组")
         self.play(
-            Indicate(equations)
+            Indicate(equations),
+            run_time=2,
         )
+        self.sub(0.5)
+        self.subtitle("观众们可以暂停自己写几个例子, 这并不是几个公式就可以求解的问题, 感受到了吗?")
+        self.sub(1)
         # 唔, 观众们可以暂停自己写几个例子, 这并不是一个简洁的公式就可以求解的问题, 感受到了吗?
         # 当变量个数很少的时候, 手算便可以轻松得到解答
-        var_and_eq = var_group + eq_group
-        self.play(
-            var_and_eq.animate.shift(UP)
-        )
+        self.subtitle("当变量个数很少的时候, 手算就可以解答")
+        # var_and_eq = var_group + eq_group
+        # self.play(
+        #     var_and_eq.animate.shift(UP)
+        # )
+        # three = Integer(3)
+        # six = Integer(6)
+        # ten_thousand = Integer(10000)
+        # hundred_thousand = Integer(100000)
+        three = Text("3 variables")
+        six = Text("6 equations")
+        ten_thousand = Text("10000 variables")
+        hundred_thousand = Text("1000000 equations")
 
-        n_eq = MathTex("n=")
-        m_eq = MathTex("m=")
-        n_num = Integer(3, num_decimal_places=0)
-        m_num = Integer(5, num_decimal_places=0)
-        n_big_num = Integer(10000, num_decimal_places=0)
-        m_big_num = Integer(100000, num_decimal_places=0)
-        VGroup(n_eq, m_eq, n_num, m_num, n_big_num, m_big_num).scale(1)
+        three.move_to(text)
+        six.move_to(eq_text)
+        ten_thousand.move_to(text)
+        hundred_thousand.move_to(eq_text)
 
-        n_eq.next_to(equations, DOWN)
-        m_eq.next_to(n_eq, DOWN)
-        n_num.next_to(n_eq, RIGHT)
-        m_num.next_to(m_eq, RIGHT)
+        self.play(ReplacementTransform(text, three))
+        self.play(ReplacementTransform(eq_text, six))
+        self.sub(1)
 
-        self.play(ShowCreation(VGroup(n_eq, n_num)))
-        self.play(ShowCreation(VGroup(m_eq, m_num)))
+        # n_eq = MathTex("n=")
+        # m_eq = MathTex("m=")
+        # n_num = Integer(3, num_decimal_places=0)
+        # m_num = Integer(5, num_decimal_places=0)
+        # n_big_num = Integer(10000, num_decimal_places=0)
+        # m_big_num = Integer(100000, num_decimal_places=0)
+        # VGroup(n_eq, m_eq, n_num, m_num, n_big_num, m_big_num).scale(1)
+        #
+        # n_eq.next_to(equations, DOWN)
+        # m_eq.next_to(n_eq, DOWN)
+        # n_num.next_to(n_eq, RIGHT)
+        # m_num.next_to(m_eq, RIGHT)
+        #
+        # self.play(ShowCreation(VGroup(n_eq, n_num)))
+        # self.play(ShowCreation(VGroup(m_eq, m_num)))
         # 但是当变量个数增加的时候, 就需要依靠计算机来求解了
-        self.play(
-            VGroup(n_eq, m_eq, n_num, m_num).animate.shift(LEFT)
-        )
-
-        n_big_num.next_to(n_eq, RIGHT)
-        m_big_num.next_to(m_eq, RIGHT)
-        self.play(ReplacementTransform(n_num, n_big_num),
-                  ReplacementTransform(m_num, m_big_num))
+        self.subtitle("但是当变量个数增加的时候, 就需要依靠计算机来解答了")
+        self.play(ReplacementTransform(three, ten_thousand))
+        self.play(ReplacementTransform(six, hundred_thousand))
+        self.sub(1)
+        # self.play(
+        #     VGroup(n_eq, m_eq, n_num, m_num).animate.shift(LEFT)
+        # )
+        #
+        # n_big_num.next_to(n_eq, RIGHT)
+        # m_big_num.next_to(m_eq, RIGHT)
+        # self.play(ReplacementTransform(n_num, n_big_num),
+        #           ReplacementTransform(m_num, m_big_num))
         # 但是计算机怎么求解呢?
+        self.subtitle("但是计算机怎么求解呢?")
+        self.sub(1)
+        self.play(*[Uncreate(i) for i in self.get_mobject_family_members()])
         pass
 
 
@@ -549,13 +734,19 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
             edge = graph.edges[e]
             edge.num = self.add_num(edge, w)
 
+        self.subtitle("还记得我们前面提到过的最短路吗")
         self.play(ShowCreation(graph),
-                  *[ShowCreation(i.num) for i in graph.edges.values()])
+                  *[ShowCreation(i.num) for i in graph.edges.values()],
+                  run_time=2)
+        self.sub(1)
         # 观众们还能选出6到1的最短路吗?
+        self.subtitle("观众们还能选的出 6->1 的最短路吗? 暂停试试")
+        self.wait(2)
         self.play(
             *[Indicate(i) for i in
               [graph.edges[j] for j in [(6, 3), (3, 5), (5, 2), (2, 1)]]]
         )
+        self.sub(1)
         # 差分约束问题可以转化为最短路问题!
         var = MathTex(
             "x_1",
@@ -587,27 +778,37 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
 
         graph_group = VGroup(graph, *[i.num for i in graph.edges.values()])
 
+        self.subtitle("抽象的差分约束问题却可以转换为直观的最短路问题")
         self.play(graph_group.animate.to_edge(LEFT))
 
         equal.next_to(graph_group, RIGHT)
         self.play(Write(equal))
         var_and_eq.next_to(equal)
         self.play(ShowCreation(var_and_eq))
+        self.sub(1)
         # 先给出一个小小的提示,
+        self.subtitle("先给出一个小小的提示")
+        self.sub(1)
         # 运用最短路的以下条件(dis[x]代表x到起点的最短路, w[a,b]代表边权)
+        self.subtitle("想想最短路为什么是最短路?")
         self.play(*[Uncreate(i) for i in var_and_eq + equal])
         self.play(graph_group.animate.move_to(ORIGIN))
+        self.sub(1)
         # 不妨设 dis[x] 代表6号节点到x节点的最短路
         dis1 = MathTex(r'\text{dis}_1=')
         dis1_num = Integer(26)
         dis1.next_to(graph, DOWN).shift(LEFT)
         dis1_num.next_to(dis1, RIGHT)
 
+        self.subtitle("不妨设 dis[x] 代表 6 号节点到 x 节点的最短路, dis[1] 如图所示")
         self.play(ShowCreation(dis1),
                   ReplacementTransform(VGroup(*[graph.edges[j].num.copy() for j in
-                                                [(6, 3), (3, 5), (5, 2), (2, 1)]]), dis1_num))
+                                                [(6, 3), (3, 5), (5, 2), (2, 1)]]), dis1_num), run_time=2)
+        self.wait()
         self.play(Uncreate(dis1_num))
+        self.sub(1)
         # 根据最短路的定义, 最短路显然比其他的路径短
+        self.subtitle("根据最短路的定义, 最短路显然比其他的路径短")
         # 因此, dis[1]<=dis[3]+w[3,1]
         dis3 = MathTex(r"\text{dis}_3")
         w31 = MathTex(r"w_{3\to 1}")
@@ -619,14 +820,22 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
         equ1.next_to(graph, DOWN)
         self.play(ReplacementTransform(dis1, dis1_new))
         self.play(Write(leq))
-        self.play(ShowCreation(dis3),
-                  ReplacementTransform(graph.edges[(6, 3)].num.copy(), dis3))
+        self.sub(1)
+        self.subtitle('因此, dis[1]<=dis[3]+w[3,1]')
+        self.play(  # ShowCreation(dis3),
+            ReplacementTransform(graph.edges[(6, 3)].num.copy(), dis3),
+            run_time=2)
         self.play(Write(plus))
-        self.play(ShowCreation(w31),
-                  ReplacementTransform(graph.edges[(3, 1)].num.copy(), w31))
+        self.play(  # ShowCreation(w31),
+            ReplacementTransform(graph.edges[(3, 1)].num.copy(), w31),
+            run_time=2)
+        self.sub(1)
         # 观众们可以暂停视频思考一下
+        self.subtitle('如何利用这个等式呢? 观众们可以暂停思考一下')
+        self.sub(3)
         # 观众们可能已经发现了,
         # 这个等式和差分约束系统的不等式十分相似,
+        self.subtitle('观众们可能已经发现了')
         iff = MathTex(r"\iff{}")
         equ2 = MathTex(
             r"\text{dis}_3",
@@ -649,21 +858,27 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
         equ4.next_to(graph, DOWN)
         self.play(ReplacementTransform(equ1, equ1_new))
         self.play(ShowCreation(VGroup(iff, equ2)))
+        self.sub(1)
+        self.subtitle("这个不等变形之后, 和差分约束系统的不等式非常像")
         self.play(ShowCreation(VGroup(leftrightarrow, eq3)))
+        self.sub(1)
         # 因此我们可以用节点和边权来模拟变量和约束,
+        self.subtitle("因此我们可以用节点和边权来模拟变量和约束")
         # 对于每一个约束 x_i-x_j<=w_i
         self.play(Uncreate(equ1_new), Uncreate(iff))
         self.play(Uncreate(graph_group))
+        self.sub(0.5)
 
         eq5 = VGroup(equ2, leftrightarrow, eq3)
         eq5.arrange(RIGHT)
+        self.subtitle("对每一个约束 xi-xj<=wi")
         self.play(eq5.animate.move_to(ORIGIN))
         self.play(eq5.animate.shift(2 * UP))
 
         updownarrow = MathTex(r"\updownarrow{}")
         updownarrow.next_to(eq5, DOWN)
         self.play(Write(updownarrow))
-
+        self.sub(1)
         # 从节点 j 和节点 i 之间连接一条边权为 w_i 的边
         two_node = Graph(["i", "j"], [("j", "i")], labels=True, edge_type=Arrow, layout_scale=1)
         e = two_node.edges[("j", "i")]
@@ -674,22 +889,37 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
         sol = VGroup(eq6, leftrightarrow.copy(), two_group)
         sol.arrange(RIGHT)
         sol.next_to(updownarrow, DOWN)
-        self.play(ShowCreation(sol))
+        self.subtitle("从节点 j 向节点 i 之间连接一条边权为 wi 的边")
+        self.play(ShowCreation(sol), run_time=1)
+        self.sub(1)
         # 当然了, 由于差分约束系统存在多解, 因此我们还需要想办法来约束解以便得到一组特解
         # 观众们不妨暂停视频再想一想
         # 我们可以添加一个新的 0 号节点, 并且向每个点连一条权重为 0 的边
         # 这个做法相当于规定差分约束系统中最大的变量的值为 0
         # 接下来用之前提到过的算法求解出最短路, 便可以得到一组特解了, 特解就是 x_i = dis[i]
+        self.subtitle("当然了, 由于差分约束系统存在多解, 因此我们还需要想办法来约束解得到一组特解")
+        self.sub(1)
+        self.subtitle("观众们不妨暂停视频再想一想")
+        self.sub(1)
+        self.subtitle("我们可以添加一个新的 0 号节点, 并且向每个点连一条权重为 0 的边")
+        self.sub(1)
+        self.subtitle("这个做法相当于规定差分约束系统中最大的变量的值为 0")
         self.play(*[Uncreate(i) for i in self.get_mobject_family_members()])
+        self.sub(1)
         answer = MathTex(
             r"\text{dis}_1&=x_1\\",
             r"\text{dis}_2&=x_2\\",
             r"\vdots&\\",
             r"\text{dis}_n&=x_n",
         )
+        self.subtitle('这样, 用之前提到过的算法求解出最短路, 便可以得到一组特解了')
         self.play(Write(answer))
+        self.sub(1)
         # 就这样, 一个数学上的问题转化为了一个图论中的问题, 并且得到了良好的解答
+        self.subtitle("这样, 一个数学上的问题就转化为了一个最短路的问题, 并且得到了良好的解答")
+        self.sub(1)
         # 当然, 差分约束系统还有一些扩展, 所以最后留一些思考题给大家, 大家可以思考如何讲这些问题转化为差分约束问题
+        self.subtitle("当然, 差分约束系统还有一些拓展, 最后留一些思考题给大家\n大家可以思考如何将这些问题转化为差分约束问题")
         # x_a-x_b>=c
         # x_a=x_b
         # x_i/x_j<=c_k
@@ -699,6 +929,8 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
             r"{x_i\over x_j}&\leqslant{} w",
         )
         self.play(ReplacementTransform(answer, question))
+        self.sub(3)
+        self.play(*[Uncreate(i) for i in self.get_mobject_family_members()])
         pass
 
 
@@ -733,18 +965,22 @@ class Bilibili(PikachuScene):
         # 显示
         # 假如你觉得我们的视频不错的话,
         # 求点赞求投币求收藏
+        self.subtitle("假如你觉得我们的视频不错的话, 求点赞求投币头收藏, 可以一键三连呀!")
         self.play(ShowCreation(three))
         for item in three:
             self.play(
                 Indicate(item, color=PINK)
             )
-
         self.play(
             three.animate.shift(2 * UP),
         )
+        self.sub(1)
+        self.subtitle("同时, 本视频由 Manim 生成, 感谢 3B1B, Manim 社区对该软件的开发维护!")
         thanks.next_to(three, DOWN)
         self.play(FadeIn(thanks))
         self.play(banner.expand())
+        self.sub(0.5)
+        self.subtitle("感谢观看!")
 
         # 感谢观看!
         # 同时展示3Blue1Brown和Manim的Banner
