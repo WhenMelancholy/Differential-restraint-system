@@ -111,6 +111,9 @@ class PikachuScene(Scene):
         for k, v in self.CONFIG.items():
             self.__setattr__(k, v)
 
+    def construct(self):
+        pass
+
 
 class Begin(PikachuScene):
     """
@@ -140,7 +143,7 @@ class Begin(PikachuScene):
         author = Text(self.author)
 
         # 排版布局
-        strings = VGroup(class_name, author).arrange(RIGHT, buff=2)
+        strings = VGroup(class_name, author).arrange(DOWN, buff=0.5)
         Group(logo, strings).arrange(DOWN, buff=1)
 
         # 展示对象
@@ -257,7 +260,7 @@ class RealityShortestPath(PikachuScene):
         self.sub(0.5)
 
         self.subtitle("例如, 在送外卖的时候, 地图推荐了最短的路线")
-        self.play(ShowCreation(short_line), run_time=2)
+        self.play(GrowArrow(short_line), run_time=2)
         self.play(MoveAlongPath(
             bike,
             move_line,
@@ -266,12 +269,12 @@ class RealityShortestPath(PikachuScene):
             run_time=5)
         self.sub(0.5)
 
-        self.subtitle("就可以开开心心的早点吃上热腾腾的饭菜")
+        self.subtitle("饿扁了的孩子就可以开开心心的早点吃上热腾腾的饭菜")
         self.play(Transform(person, happy), run_time=1.5)
         self.sub(0.5)
 
         self.subtitle("但是假如推荐了一条绕来绕去的路线")
-        self.play(GrowArrow(random_line), run_time=3)
+        self.play(ShowCreation(random_line), run_time=3)
         self.sub(0.5)
 
         self.subtitle("可怜的孩子就只能饥肠辘辘了")
@@ -279,9 +282,16 @@ class RealityShortestPath(PikachuScene):
             bike,
             move_random_path,
         ),
+            rate_func=linear,
             run_time=6)
         self.play(Transform(person, sad))
         self.sub(0.5)
+        self.subtitle("在城市间道路安排, 铁路公路布局, 也有着最短路的身影")
+        self.sub(1)
+        self.subtitle("最短路在数学中也有着应用")
+        self.sub(1)
+
+        self.tear_down()
 
         # self.wait(2)
         return
@@ -400,7 +410,7 @@ class IntroductionToGraph(PikachuScene):
         five_km = Text("5 km")
 
         node1 = Node(self.node_radius, num="1")
-        node2 = Node(self.node_radius, num="1")
+        node2 = Node(self.node_radius, num="2")
         negative_km = Text("-5")
 
         # layout
@@ -423,7 +433,7 @@ class IntroductionToGraph(PikachuScene):
         # present
         # 数学上的最短路和现实有什么不一样吗?
         # 比如, 现实里面的距离只能是正数,
-        self.subtitle("抽象的最短路和现实有什么不一样吗?")
+        self.subtitle("那数学上的抽象的最短路和现实有什么不一样吗?")
         self.play(
             ShowCreation(tall_building1),
             ShowCreation(tall_building2),
@@ -1016,7 +1026,7 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
         self.subtitle("我们可以添加一个新的 0 号节点, 并且向每个点连一条权重为 0 的边")
         self.sub(1)
         self.subtitle("这个做法相当于规定差分约束系统中最大的变量的值为 0")
-        self.play(*[Uncreate(i) for i in self.get_mobject_family_members()])
+        self.play(*[Uncreate(i) for i in self.get_mobject_family_members()], run_time=2)
         self.sub(1)
         answer = MathTex(
             r"\text{dis}_1&=x_1\\",
@@ -1077,7 +1087,7 @@ class Bilibili(PikachuScene):
         # 显示
         # 假如你觉得我们的视频不错的话,
         # 求点赞求投币求收藏
-        self.subtitle("假如你觉得我们的视频不错的话, 求点赞求投币头收藏, 可以一键三连呀!")
+        self.subtitle("假如你觉得我们的视频不错的话, 求点赞求投币求收藏, 可以一键三连呀!")
         self.play(ShowCreation(three))
         for item in three:
             self.play(
@@ -1100,7 +1110,7 @@ class Bilibili(PikachuScene):
         pass
 
 
-class Video(Begin, BeginTitle, IntroductionToGraph, IntroudctionToSystemOfDifferenceConstraints,
+class Video(Begin, BeginTitle, RealityShortestPath, IntroductionToGraph, IntroudctionToSystemOfDifferenceConstraints,
             IntroductionToSolutionsOfSystemOfDifferenceConstraints, Bilibili):
     CONFIG = {
 
@@ -1109,12 +1119,14 @@ class Video(Begin, BeginTitle, IntroductionToGraph, IntroudctionToSystemOfDiffer
     def __init__(self, *args, **kwargs):
         self.CONFIG.update(Begin.CONFIG)
         self.CONFIG.update(BeginTitle.CONFIG)
+        self.CONFIG.update(RealityShortestPath.CONFIG)
         self.CONFIG.update(IntroductionToGraph.CONFIG)
         self.CONFIG.update(IntroudctionToSystemOfDifferenceConstraints.CONFIG)
         self.CONFIG.update(IntroductionToSolutionsOfSystemOfDifferenceConstraints.CONFIG)
         self.CONFIG.update(Bilibili.CONFIG)
         Begin.__init__(self, *args, **kwargs)
         BeginTitle.__init__(self, *args, **kwargs)
+        RealityShortestPath.__init__(self, *args, **kwargs)
         IntroductionToGraph.__init__(self, *args, **kwargs)
         IntroudctionToSystemOfDifferenceConstraints.__init__(self, *args, **kwargs)
         IntroductionToSolutionsOfSystemOfDifferenceConstraints.__init__(self, *args, **kwargs)
@@ -1126,6 +1138,7 @@ class Video(Begin, BeginTitle, IntroductionToGraph, IntroudctionToSystemOfDiffer
         self.add_sound(r"asset/Nocturne in E flat major, Op. 9 no. 2.mp3")
         Begin.construct(self)
         BeginTitle.construct(self)
+        RealityShortestPath.construct(self)
         IntroductionToGraph.construct(self)
         IntroudctionToSystemOfDifferenceConstraints.construct(self)
         IntroductionToSolutionsOfSystemOfDifferenceConstraints.construct(self)
