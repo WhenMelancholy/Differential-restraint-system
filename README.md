@@ -23,7 +23,7 @@
 
 - 项目的源码在压缩包里, 包含了用到的素材/虚拟环境的配置文件/代码/开题报告的PPT, 同时项目的主页托管在 GitHub 上, 从中也可以看到项目的历史记录(和代码风格的变化), 也许会对后面想入坑的同学有所帮助
   - 项目的 GitHub 主页: [WhenMelancholy/Differential-restraint-system (github.com)](https://github.com/WhenMelancholy/Differential-restraint-system)
-  - 项目的科大内网 GitLab 主页:
+  - 项目的科大内网 GitLab 主页: [Qiu Mufan / Differential restraint system · GitLab (ustc.edu.cn)](https://git.lug.ustc.edu.cn/Melancholy/differential-restraint-system)
 - 就我个人而言, 原本我是想做一期视频展现抽象的差分约束不等式和直观的最短路之间有着怎样的联系, 但是在实际的制作过程中, 我还感受到了代码的美. 一个是 Manim 通过抽象而又精巧的模块设计, 完成了通过代码制作动画这一个较为复杂的功能. 一个是在深入了解 Manim 后, 我了解到贝塞尔曲线在生成动画方面的强大, 例如可以通过矩阵对贝塞尔曲线控制点的操作来完成缩放/移动/变形的动画, 以及贝塞尔曲线相关的函数可以用来控制速度, 实现更为流畅的动画, 这些也是我在制作过程中所收获的科学之美. 当然, 这其中美只有亲身制作才能体会到了, 也希望下一次选课的同学们能够有着更多的收获, 感受到更多的科学的美!
 
 ## 视频内容安排
