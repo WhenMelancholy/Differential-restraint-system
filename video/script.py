@@ -187,6 +187,7 @@ class RealityShortestPath(PikachuScene):
 
         "happy_file": r"asset\happy.svg",
         "sad_file": r"asset\sad-cry-regular.svg",
+        "random_path": r"asset\randompath.svg",
     }
 
     # def __init__(self, **kwargs):
@@ -219,59 +220,110 @@ class RealityShortestPath(PikachuScene):
         move_line = Line(bike.get_center() + 0.00 * (person.get_center() - bike.get_center()),
                          bike.get_center() + 0.95 * (person.get_center() - bike.get_center()), color=WHITE)
         print(bike.get_center(), person.get_center())
-        self.add(bike, person, short_line)
-        self.play(MoveAlongPath(bike, move_line), run_time=5, rate_func=there_and_back_with_pause)
-
-        random_line = VMobject()
-        points = [[-6, 3, 0],
-                  [6, 3, 0],
-                  [6, 2, 0],
-                  [-2, 2, 0],
-                  ]
-        random_line.set_points_as_corners(points)
-        self.play(GrowArrow(random_line))
-        self.wait(2)
-        # self.wait(2)
-        return
-        # random_line = self.get_random_line(bike.get_right(), person.get_left())
         happy.move_to(person)
         sad.move_to(person)
 
-        # 显示
-        # 在生活中的很多地方, 都有最短路的概念
-        # 小到送外卖的时候
-        self.subtitle("生活中的很多地方, 都有最短路的概念")
-        self.play(ShowCreation(bike), ShowCreation(person))
-        self.sub(1)
-        self.subtitle("小到送外卖")
-        self.play(ShowCreation(short_line), ShowCreation(random_line))
-        self.sub(1)
-        # 地图为外卖小哥推荐了最短的路线
-        beg_pos = bike.get_center()
-        end_pos = person.get_center()
-        self.subtitle("当地图为外面小哥推荐了最短的路线")
-        self.play(
-            MoveAlongPath(bike, short_line)
-        )
-        self.sub(1)
-        # 饿扁了的孩子就可以早点吃上饭菜
-        self.subtitle("饿扁了的孩子就可以早点吃上饭菜")
-        self.play(MoveAlongPath(bike, short_line.reverse_points()))
-        self.play(ReplacementTransform(person, happy))
-        self.sub(1)
+        points = [
+            [5.7, 2.88, 0],
+            [5.7, 1.7, 0],
+            [-0.5, 1.7, 0],
+            [-0.5, 0.5, 0],
+            [5.7, 0.5, 0],
+            [5.7, -0.5, 0],
+            [3.5, -0.5, 0],
+            [3.5, -1.2, 0],
+            [5.7, -1.2, 0],
+            [5.7, -3, 0],
+        ]
+        random_line = VMobject(color=WHITE).set_points_as_corners([
+            short_line.get_start(),
+            *points,
+            short_line.get_end(),
+        ])
+        move_random_path = VMobject(color=WHITE).set_points_as_corners([
+            bike.get_center(),
+            [5.7, 2.88, 0],
+            [5.7, 1.7, 0],
+            [-0.5, 1.7, 0],
+            [-0.5, 0.5, 0],
+            [5.7, 0.5, 0],
+            [5.7, -0.5, 0],
+        ])
 
-        # 假如地图给出了错误的路线
-        self.subtitle("假如地图给出了错误的路线")
-        self.play(MoveAlongPath(bike, self.get_half_random_line(bike.get_center(), person.get_center())))
-        # 孩子就只能饥肠辘辘了
-        self.play(ReplacementTransform(happy, sad))
-        # 大到城市间的道路安排, 铁路公路的布局
-        # 如何布局才能降低修建难度, 维护成本, 提高运营收益
-        # 都有着最短路的身影
-        # 最短路在数学中也有着很多应用
-        # 比如差分约束问题
-        # 等等, 别被吓住了,
-        # 很高兴你回来了
+        # present
+        self.subtitle("生活中的很多地方, 都有最短路的概念")
+        self.play(ShowCreation(VGroup(bike, person)),
+                  runt_time=1)
+        self.sub(0.5)
+
+        self.subtitle("例如, 在送外卖的时候, 地图推荐了最短的路线")
+        self.play(ShowCreation(short_line), run_time=2)
+        self.play(MoveAlongPath(
+            bike,
+            move_line,
+        ),
+            rate_func=there_and_back_with_pause,
+            run_time=5)
+        self.sub(0.5)
+
+        self.subtitle("就可以开开心心的早点吃上热腾腾的饭菜")
+        self.play(Transform(person, happy), run_time=1.5)
+        self.sub(0.5)
+
+        self.subtitle("但是假如推荐了一条绕来绕去的路线")
+        self.play(GrowArrow(random_line), run_time=3)
+        self.sub(0.5)
+
+        self.subtitle("可怜的孩子就只能饥肠辘辘了")
+        self.play(MoveAlongPath(
+            bike,
+            move_random_path,
+        ),
+            run_time=6)
+        self.play(Transform(person, sad))
+        self.sub(0.5)
+
+        # self.wait(2)
+        return
+        # random_line = self.get_random_line(bike.get_right(), person.get_left())
+        # happy.move_to(person)
+        # sad.move_to(person)
+
+        # # 显示
+        # # 在生活中的很多地方, 都有最短路的概念
+        # # 小到送外卖的时候
+        # self.subtitle("生活中的很多地方, 都有最短路的概念")
+        # self.play(ShowCreation(bike), ShowCreation(person))
+        # self.sub(1)
+        # self.subtitle("小到送外卖")
+        # self.play(ShowCreation(short_line), ShowCreation(random_line))
+        # self.sub(1)
+        # # 地图为外卖小哥推荐了最短的路线
+        # beg_pos = bike.get_center()
+        # end_pos = person.get_center()
+        # self.subtitle("当地图为外面小哥推荐了最短的路线")
+        # self.play(
+        #     MoveAlongPath(bike, short_line)
+        # )
+        # self.sub(1)
+        # # 饿扁了的孩子就可以早点吃上饭菜
+        # self.subtitle("饿扁了的孩子就可以早点吃上饭菜")
+        # self.play(MoveAlongPath(bike, short_line.reverse_points()))
+        # self.play(ReplacementTransform(person, happy))
+        # self.sub(1)
+        #
+        # # 假如地图给出了错误的路线
+        # self.subtitle("假如地图给出了错误的路线")
+        # self.play(MoveAlongPath(bike, self.get_half_random_line(bike.get_center(), person.get_center())))
+        # # 孩子就只能饥肠辘辘了
+        # self.play(ReplacementTransform(happy, sad))
+        # # 大到城市间的道路安排, 铁路公路的布局
+        # # 如何布局才能降低修建难度, 维护成本, 提高运营收益
+        # # 都有着最短路的身影
+        # # 最短路在数学中也有着很多应用
+        # # 比如差分约束问题
+        # # 等等, 别被吓住了,
+        # # 很高兴你回来了
 
     def get_half_random_line(self, start, end):
         return Polygon([start,
