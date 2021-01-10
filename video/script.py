@@ -136,7 +136,6 @@ class Begin(PikachuScene):
     #     self.logo_scale = 0.25
 
     def construct(self):
-        super().construct()
         # 添加对象
         logo = ImageMobject(self.png_name).move_to(ORIGIN).set_width(self.logo_scale * config.frame_width)
         class_name = Text(self.class_name)
