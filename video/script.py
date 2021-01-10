@@ -76,6 +76,9 @@ class PikachuScene(Scene):
         #     self.wait(time)
         #     self.play(Uncreate(pretitle))
 
+    def tear_down(self):
+        self.play(*[FadeOut(i) for i in self.get_mobject_family_members()])
+
     def add_num(self, mob: Line, w: int or str, offset=0.15, scaler=0.7):
         if isinstance(w, int):
             num = Integer(w, num_decimal_places=0)
@@ -83,7 +86,7 @@ class PikachuScene(Scene):
             num = MathTex(w)
         else:
             raise Exception("Please given right argument")
-        num.set_color(GREEN)
+        num.set_color(ORANGE)
         num.move_to(mob.get_center() + mob.copy().rotate(PI / 2).get_unit_vector() * offset)
         # angle = mob.get_angle() + PI
         # if angle >= 2 * PI:
@@ -102,9 +105,9 @@ class PikachuScene(Scene):
 
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.pretitle = None
-        super().__init__(**kwargs)
         for k, v in self.CONFIG.items():
             self.__setattr__(k, v)
 
@@ -115,7 +118,7 @@ class Begin(PikachuScene):
     """
     CONFIG = {
         "svg_name": r"asset\white.svg",
-        "author": "When",
+        "author": "B站用户: 凉宫春日的忘却",
         "class_name": "科学之美",
         "png_name": r"asset\logo.png",
         "logo_scale": 0.2,
@@ -146,6 +149,9 @@ class Begin(PikachuScene):
             Write(strings),
         )
 
+        self.wait(5)
+        self.tear_down()
+
 
 class BeginTitle(PikachuScene):
     """
@@ -161,6 +167,8 @@ class BeginTitle(PikachuScene):
 
         self.play(Write(awesome))
         self.play(Write(extend))
+        self.wait(1)
+        self.play(FadeOut(VGroup(awesome, extend)))
 
 
 class RealityShortestPath(PikachuScene):
@@ -197,34 +205,64 @@ class RealityShortestPath(PikachuScene):
         person = SVGMobject(self.person_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.person_scale)
         bike.add_background_rectangle(opacity=0)
         person.add_background_rectangle(opacity=0)
-        happy = SVGMobject(self.happy_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.person_scale)
-        sad = SVGMobject(self.sad_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.person_scale)
+        happy = SVGMobject(self.happy_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.person_scale).set_width(
+            person.get_width())
+        sad = SVGMobject(self.sad_file, stroke_width=0.2 * DEFAULT_STROKE_WIDTH).scale(self.person_scale).set_width(
+            person.get_width())
 
         # 布局
         bike.to_edge(UP + LEFT)
         person.to_edge(DOWN + RIGHT)
-        short_line = self.get_short_line([bike.get_right(), person.get_left()])
-        random_line = self.get_random_line(bike.get_right(), person.get_left())
+        # short_line = self.get_short_line([bike.get_right(), person.get_left()])
+        short_line = Line(bike.get_center() + 0.05 * (person.get_center() - bike.get_center()),
+                          bike.get_center() + 0.95 * (person.get_center() - bike.get_center()), color=WHITE)
+        move_line = Line(bike.get_center() + 0.00 * (person.get_center() - bike.get_center()),
+                         bike.get_center() + 0.95 * (person.get_center() - bike.get_center()), color=WHITE)
+        print(bike.get_center(), person.get_center())
+        self.add(bike, person, short_line)
+        self.play(MoveAlongPath(bike, move_line), run_time=5, rate_func=there_and_back_with_pause)
+
+        random_line = VMobject()
+        points = [[-6, 3, 0],
+                  [6, 3, 0],
+                  [6, 2, 0],
+                  [-2, 2, 0],
+                  ]
+        random_line.set_points_as_corners(points)
+        self.play(GrowArrow(random_line))
+        self.wait(2)
+        # self.wait(2)
+        return
+        # random_line = self.get_random_line(bike.get_right(), person.get_left())
         happy.move_to(person)
         sad.move_to(person)
 
         # 显示
         # 在生活中的很多地方, 都有最短路的概念
         # 小到送外卖的时候
+        self.subtitle("生活中的很多地方, 都有最短路的概念")
         self.play(ShowCreation(bike), ShowCreation(person))
+        self.sub(1)
+        self.subtitle("小到送外卖")
         self.play(ShowCreation(short_line), ShowCreation(random_line))
+        self.sub(1)
         # 地图为外卖小哥推荐了最短的路线
         beg_pos = bike.get_center()
         end_pos = person.get_center()
+        self.subtitle("当地图为外面小哥推荐了最短的路线")
         self.play(
-            MoveAlongPath(bike, Line(beg_pos, end_pos + UL))
+            MoveAlongPath(bike, short_line)
         )
+        self.sub(1)
         # 饿扁了的孩子就可以早点吃上饭菜
+        self.subtitle("饿扁了的孩子就可以早点吃上饭菜")
+        self.play(MoveAlongPath(bike, short_line.reverse_points()))
         self.play(ReplacementTransform(person, happy))
-        self.play(MoveAlongPath(bike, Line(bike.get_center(), beg_pos)))
+        self.sub(1)
+
         # 假如地图给出了错误的路线
-        self.play(MoveAlongPath(bike, random_line[0]))
-        self.play(MoveAlongPath(bike, Line(bike.get_center(), happy.get_center() + UP)))
+        self.subtitle("假如地图给出了错误的路线")
+        self.play(MoveAlongPath(bike, self.get_half_random_line(bike.get_center(), person.get_center())))
         # 孩子就只能饥肠辘辘了
         self.play(ReplacementTransform(happy, sad))
         # 大到城市间的道路安排, 铁路公路的布局
@@ -235,20 +273,29 @@ class RealityShortestPath(PikachuScene):
         # 等等, 别被吓住了,
         # 很高兴你回来了
 
+    def get_half_random_line(self, start, end):
+        return Polygon([start,
+                        np.array([-7, 4, 0]),
+                        np.array([7, 3, 0])])
+
     def get_short_line(self, points: list):
         pre = points.pop(0)
         lines = VGroup()
         for x in points:
             lines.add(Line(pre, x, z_index=-1))
             pre = x
-        return lines
+        return lines[0]
 
     def get_random_line(self, start, end):
-        middle = np.array([end[0], start[1], 0])
-        return VGroup(
-            Line(start, middle, z_index=-1),
-            Line(middle, end, z_index=-1)
-        )
+        middle = np.array([(start[0] + end[0]) / 3, (start[1] + end[1]) / 3, 0]) + UP
+        mid2 = np.array([(start[0] + end[0]) / 3 * 2, (start[1] + end[1]) / 3 * 2, 0]) + UP
+        return CubicBezier([start, middle, mid2, end])
+        pass
+        # middle = np.array([end[0], start[1], 0])
+        # return VGroup(
+        #     Line(start, middle, z_index=-1),
+        #     Line(middle, end, z_index=-1)
+        # )
 
         # points = [
         #     start,
@@ -519,17 +566,21 @@ class IntroductionToGraph(PikachuScene):
         self.sub(1)
         self.play(*[FadeOut(i) for i in self.get_mobject_family_members()])
         # 最短路问题研究的十分广泛, 有着多种快速解法,
-        spfa = Text("SPFA 算法")
+        spfa = Text("Bellman-Ford 算法")
         dijkstra = Text("Dijkstra 算法")
-        VGroup(spfa, dijkstra).arrange(DOWN)
+        floyd = Text("Floyd 算法")
+        VGroup(spfa, dijkstra, floyd).arrange(DOWN)
 
         self.subtitle("最短路的研究十分广泛, 有着很多快速的解法")
         self.sub(0.5)
-        self.subtitle("比如 SPFA 算法")
+        self.subtitle("比如 Bellman-Ford 算法")
         self.play(FadeIn(spfa))
         self.sub(0.5)
         self.subtitle("又比如 Dijkstra 算法")
         self.play(FadeIn(dijkstra))
+        self.sub(0.5)
+        self.subtitle("再比如代码简洁用途广泛的 Floyd 算法")
+        self.play(FadeIn(floyd))
         self.sub(0.5)
         # 很多问题也可以转换为最短路问题来求解,
         # 比如差分约束问题
@@ -591,11 +642,12 @@ class IntroudctionToSystemOfDifferenceConstraints(PikachuScene):
         var_group = VGroup(var, brace, text)
 
         equations = MathTex(
-            r"x_{i_1}", r"-", r"x_{j_2}\leqslant w_1\\",
-            r"x_{i_2}", r"-", r"x_{j_2}\leqslant w_2\\",
-            r"\vdots\\",
-            r"x_{i_m}", r"-", r"x_{j_m}\leqslant w_m\\",
+            r"x_{i_1}", r"-", r"x_{j_2}&\leqslant w_1\\",
+            r"x_{i_2}", r"-", r"x_{j_2}&\leqslant w_2\\",
+            r"\vdots&\\",
+            r"x_{i_m}", r"-", r"x_{j_m}&\leqslant w_m\\",
         )
+        equations.shift(LEFT)
         eq_brace = Brace(equations, direction=RIGHT)
         eq_text = eq_brace.get_tex(r"m \text{ equations}")
 
@@ -604,9 +656,9 @@ class IntroudctionToSystemOfDifferenceConstraints(PikachuScene):
         self.subtitle("例如, 差分约束系统")
         self.play(ShowCreation(var))
         self.sub(0.5)
-        self.subtitle("等等, 不要被这个名词吓到了")
+        self.subtitle("等等!!! 不要被这个名词吓到了")
         self.sub(1)
-        self.subtitle("他的命名和定义都很直观")
+        self.subtitle("他的命名和定义都很直观!!!")
         self.sub(1)
         self.subtitle("差分约束系统由 n 个变量")
         self.play(FadeIn(brace))
@@ -659,15 +711,19 @@ class IntroudctionToSystemOfDifferenceConstraints(PikachuScene):
         # six = Integer(6)
         # ten_thousand = Integer(10000)
         # hundred_thousand = Integer(100000)
-        three = Text("3 variables")
-        six = Text("6 equations")
-        ten_thousand = Text("10000 variables")
-        hundred_thousand = Text("1000000 equations")
+        three = brace.get_text("3 variables")
+        six = eq_brace.get_text("6 equations")
+        ten_thousand = brace.get_text("10000 variables")
+        hundred_thousand = eq_brace.get_text("1000000 equations")
 
-        three.move_to(text)
-        six.move_to(eq_text)
-        ten_thousand.move_to(text)
-        hundred_thousand.move_to(eq_text)
+        # three.move_to(text)
+        # six.move_to(eq_text)
+        # ten_thousand.move_to(text)
+        # hundred_thousand.move_to(eq_text)
+        # three.next_to(brace, UP)
+        # six.next_to(eq_brace, RIGHT)
+        # ten_thousand.next_to(brace, UP)
+        # hundred_thousand.next_to(eq_brace, RIGHT)
 
         self.play(ReplacementTransform(text, three))
         self.play(ReplacementTransform(eq_text, six))
@@ -741,10 +797,12 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
         self.sub(1)
         # 观众们还能选出6到1的最短路吗?
         self.subtitle("观众们还能选的出 6->1 的最短路吗? 暂停试试")
-        self.wait(2)
+        self.sub(4)
+        self.subtitle("6->1 的最短路如图所示↑")
         self.play(
             *[Indicate(i) for i in
-              [graph.edges[j] for j in [(6, 3), (3, 5), (5, 2), (2, 1)]]]
+              [graph.edges[j] for j in [(6, 3), (3, 5), (5, 2), (2, 1)]]],
+            run_time=1,
         )
         self.sub(1)
         # 差分约束问题可以转化为最短路问题!
@@ -900,6 +958,8 @@ class IntroductionToSolutionsOfSystemOfDifferenceConstraints(PikachuScene):
         self.subtitle("当然了, 由于差分约束系统存在多解, 因此我们还需要想办法来约束解得到一组特解")
         self.sub(1)
         self.subtitle("观众们不妨暂停视频再想一想")
+        self.sub(3)
+        self.subtitle("想到了吗?")
         self.sub(1)
         self.subtitle("我们可以添加一个新的 0 号节点, 并且向每个点连一条权重为 0 的边")
         self.sub(1)
@@ -984,6 +1044,40 @@ class Bilibili(PikachuScene):
 
         # 感谢观看!
         # 同时展示3Blue1Brown和Manim的Banner
+        self.tear_down()
+        pass
+
+
+class Video(Begin, BeginTitle, IntroductionToGraph, IntroudctionToSystemOfDifferenceConstraints,
+            IntroductionToSolutionsOfSystemOfDifferenceConstraints, Bilibili):
+    CONFIG = {
+
+    }
+
+    def __init__(self, *args, **kwargs):
+        self.CONFIG.update(Begin.CONFIG)
+        self.CONFIG.update(BeginTitle.CONFIG)
+        self.CONFIG.update(IntroductionToGraph.CONFIG)
+        self.CONFIG.update(IntroudctionToSystemOfDifferenceConstraints.CONFIG)
+        self.CONFIG.update(IntroductionToSolutionsOfSystemOfDifferenceConstraints.CONFIG)
+        self.CONFIG.update(Bilibili.CONFIG)
+        Begin.__init__(self, *args, **kwargs)
+        BeginTitle.__init__(self, *args, **kwargs)
+        IntroductionToGraph.__init__(self, *args, **kwargs)
+        IntroudctionToSystemOfDifferenceConstraints.__init__(self, *args, **kwargs)
+        IntroductionToSolutionsOfSystemOfDifferenceConstraints.__init__(self, *args, **kwargs)
+        Bilibili.__init__(self, *args, **kwargs)
+        Scene.__init__(self, *args, **kwargs)
+        self.time = 0
+
+    def construct(self):
+        self.add_sound(r"asset/Nocturne in E flat major, Op. 9 no. 2.mp3")
+        Begin.construct(self)
+        BeginTitle.construct(self)
+        IntroductionToGraph.construct(self)
+        IntroudctionToSystemOfDifferenceConstraints.construct(self)
+        IntroductionToSolutionsOfSystemOfDifferenceConstraints.construct(self)
+        Bilibili.construct(self)
         pass
 
 
@@ -1002,3 +1096,21 @@ class LabeledModifiedGraph(Scene):
         self.play(*[FadeIn(i) for i in g.vertices.values()])
         self.play(*[FadeOut(i) for i in g.family_members_with_points()])
         # print(g.get_family())
+
+
+class ArcPolygonExample2(Scene):
+    def construct(self):
+        arc_conf = {"stroke_width": 3, "stroke_color": BLUE,
+                    "fill_opacity": 0.5, "color": GREEN}
+        poly_conf = {"color": None}
+        a = [-1, 0, 0]
+        b = [1, 0, 0]
+        c = [0, np.sqrt(3), 0]
+        arc0 = ArcBetweenPoints(a, b, radius=2, **arc_conf)
+        arc1 = ArcBetweenPoints(b, c, radius=2, **arc_conf)
+        arc2 = ArcBetweenPoints(c, a, radius=2, stroke_color=RED)
+        reuleaux_tri = ArcPolygonFromArcs(arc0, arc1, **poly_conf)
+        self.play(FadeIn(reuleaux_tri))
+        dot = Dot()
+        self.play(MoveAlongPath(dot, reuleaux_tri), run_time=5)
+        self.wait(2)
