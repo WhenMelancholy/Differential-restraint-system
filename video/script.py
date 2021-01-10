@@ -122,7 +122,7 @@ class Begin(PikachuScene):
     CONFIG = {
         "svg_name": r"asset\white.svg",
         "author": "B站用户: 凉宫春日的忘却",
-        "class_name": "科学之美",
+        "class_name": "科学之美课程大作业",
         "png_name": r"asset\logo.png",
         "logo_scale": 0.2,
     }
