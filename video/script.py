@@ -147,11 +147,12 @@ class Begin(PikachuScene):
 
         # 展示对象
         self.play(
-            GrowFromCenter(logo),
+            FadeIn(logo),
             Write(strings),
+            run_time=2,
         )
 
-        self.wait(5)
+        self.wait(3)
         self.tear_down()
 
 
